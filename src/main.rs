@@ -4,6 +4,9 @@ use num_bigint::BigUint;
 use num_bigint::ToBigUint;
 use num_traits::Zero;
 use std::fs::File;
+use std::fs::OpenOptions;
+use std::io::BufRead;
+use std::io::BufReader;
 use std::io::BufWriter;
 use std::io::Write;
 use std::path::PathBuf;
@@ -36,9 +39,13 @@ struct Args {
     #[arg(short, long, default_value = "false")]
     truncate: bool,
     
-    /// Output the results to a file.
+    /// Output the results to a csv file.
     #[arg(short, long)]
     output: Option<PathBuf>,
+    
+    /// Continue adding results to an existing csv file.
+    #[arg(short, long)]
+    cont: Option<PathBuf>,
 
     /// Print the Kaprekar routine.
     #[arg(short, long)]
@@ -66,8 +73,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 },
                 Err(e) => eprintln!("Failed to create file: {}", e),
             }
-        } else {
-            eprintln!("No output file specified.");
+        } else if let Some(cont_path) = args.cont {
+            match File::open(&cont_path) {
+                Ok(file) => {
+                    let rdr = BufReader::new(file);
+                    for line in rdr.lines() {
+                        let line = line?;
+                        let mut parts = line.split(",");
+                        let n = parts.next().unwrap().parse::<BigUint>().unwrap();
+                        number = n;
+                    }
+                },
+                Err(e) => eprintln!("Failed to open file: {}", e),
+            }
+            match OpenOptions::new().append(true).create(true).open(&cont_path) {
+                Ok(file) => {
+                    wtr = Some(BufWriter::new(file));
+                    // Now you can use wtr to write your CSV data
+                },
+                Err(e) => eprintln!("Failed to open file: {}", e),
+            }
         }
         loop {
             let result = kaprekar(number.clone(), args.verbose, args.iterations, args.truncate);
@@ -93,8 +118,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 },
                 Err(e) => eprintln!("Failed to create file: {}", e),
             }
-        } else {
-            eprintln!("No output file specified.");
         }
         while number <= args.end {
             let result = kaprekar(number.clone(), args.verbose, args.iterations, args.truncate);
@@ -120,8 +143,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 },
                 Err(e) => eprintln!("Failed to create file: {}", e),
             }
-        } else {
-            eprintln!("No output file specified.");
         }
         loop {
             let result = kaprekar(number.clone(), args.verbose, args.iterations, args.truncate);
@@ -147,8 +168,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 },
                 Err(e) => eprintln!("Failed to create file: {}", e),
             }
-        } else {
-            eprintln!("No output file specified.");
         }
         while number <= args.end {
             let result = kaprekar(number.clone(), args.verbose, args.iterations, args.truncate);
