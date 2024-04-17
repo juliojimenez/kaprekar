@@ -3,6 +3,10 @@ use clap::Parser;
 use num_bigint::BigUint;
 use num_bigint::ToBigUint;
 use num_traits::Zero;
+use std::fs::File;
+use std::io::BufWriter;
+use std::io::Write;
+use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -31,6 +35,10 @@ struct Args {
     /// https://kaprekar.sourceforge.net/output/sample.php
     #[arg(short, long, default_value = "false")]
     truncate: bool,
+    
+    /// Output the results to a file.
+    #[arg(short, long)]
+    output: Option<PathBuf>,
 
     /// Print the Kaprekar routine.
     #[arg(short, long)]
@@ -40,38 +48,120 @@ struct Args {
     #[arg(long)]
     symlink: bool,
 }
-fn main() {
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
     let mut cmd = Args::command();
+    let mut wtr: Option<BufWriter::<File>> = None;
     if args.number != Zero::zero() {
         let result = kaprekar(args.number, args.verbose, args.iterations, args.truncate);
         println!("{:?}", result);
     } else if args.all {
         let mut number: BigUint = Zero::zero();
+        if let Some(output_path) = args.output {
+            match File::create(&output_path) {
+                Ok(file) => {
+                    wtr = Some(BufWriter::new(file));
+                    // Now you can use wtr to write your CSV data
+                },
+                Err(e) => eprintln!("Failed to create file: {}", e),
+            }
+        } else {
+            eprintln!("No output file specified.");
+        }
         loop {
             let result = kaprekar(number.clone(), args.verbose, args.iterations, args.truncate);
             println!("{}\t{:?}", number, result);
+            if let Some(ref mut writer) = wtr {
+                let mut series = result.iter().map(|x| x.to_string()).collect::<Vec<String>>().join(",");
+                let current_columns = series.len();
+                if current_columns < args.iterations as usize {
+                    series.push_str(&",".repeat(args.iterations as usize - current_columns));
+                }
+                writer.write_all(format!("{},{}\n", number, series).as_bytes())?;
+                writer.flush()?;
+            }
             number += 1.to_biguint().unwrap();
         }
     } else if args.start != Zero::zero() && args.end != Zero::zero() {
         let mut number = args.start.clone();
+        if let Some(output_path) = args.output {
+            match File::create(&output_path) {
+                Ok(file) => {
+                    wtr = Some(BufWriter::new(file));
+                    // Now you can use wtr to write your CSV data
+                },
+                Err(e) => eprintln!("Failed to create file: {}", e),
+            }
+        } else {
+            eprintln!("No output file specified.");
+        }
         while number <= args.end {
             let result = kaprekar(number.clone(), args.verbose, args.iterations, args.truncate);
             println!("{}\t{:?}", number, result);
+            if let Some(ref mut writer) = wtr {
+                let mut series = result.iter().map(|x| x.to_string()).collect::<Vec<String>>().join(",");
+                let current_columns = series.len();
+                if current_columns < args.iterations as usize {
+                    series.push_str(&",".repeat(args.iterations as usize - current_columns));
+                }
+                writer.write_all(format!("{},{}\n", number, series).as_bytes())?;
+                writer.flush()?;
+            }
             number += 1.to_biguint().unwrap();
         }
     } else if args.start != Zero::zero() {
         let mut number = args.start.clone();
+        if let Some(output_path) = args.output {
+            match File::create(&output_path) {
+                Ok(file) => {
+                    wtr = Some(BufWriter::new(file));
+                    // Now you can use wtr to write your CSV data
+                },
+                Err(e) => eprintln!("Failed to create file: {}", e),
+            }
+        } else {
+            eprintln!("No output file specified.");
+        }
         loop {
             let result = kaprekar(number.clone(), args.verbose, args.iterations, args.truncate);
             println!("{}\t{:?}", number, result);
+            if let Some(ref mut writer) = wtr {
+                let mut series = result.iter().map(|x| x.to_string()).collect::<Vec<String>>().join(",");
+                let current_columns = series.len();
+                if current_columns < args.iterations as usize {
+                    series.push_str(&",".repeat(args.iterations as usize - current_columns));
+                }
+                writer.write_all(format!("{},{}\n", number, series).as_bytes())?;
+                writer.flush()?;
+            }
             number += 1.to_biguint().unwrap();
         }
     } else if args.end != Zero::zero() {
         let mut number: BigUint = Zero::zero();
+        if let Some(output_path) = args.output {
+            match File::create(&output_path) {
+                Ok(file) => {
+                    wtr = Some(BufWriter::new(file));
+                    // Now you can use wtr to write your CSV data
+                },
+                Err(e) => eprintln!("Failed to create file: {}", e),
+            }
+        } else {
+            eprintln!("No output file specified.");
+        }
         while number <= args.end {
             let result = kaprekar(number.clone(), args.verbose, args.iterations, args.truncate);
             println!("{}\t{:?}", number, result);
+            if let Some(ref mut writer) = wtr {
+                let mut series = result.iter().map(|x| x.to_string()).collect::<Vec<String>>().join(",");
+                let current_columns = series.len();
+                if current_columns < args.iterations as usize {
+                    series.push_str(&",".repeat(args.iterations as usize - current_columns));
+                }
+                writer.write_all(format!("{},{}\n", number, series).as_bytes())?;
+                writer.flush()?;
+            }
             number += 1.to_biguint().unwrap();
         }
     } else if args.symlink {
@@ -82,7 +172,7 @@ fn main() {
     } else {
         cmd.print_help().unwrap();
     }
-    
+    return Ok(());
 }
 
 fn kaprekar(mut num: BigUint, verbose: bool, iterations: u16, truncate: bool) -> Vec<BigUint> {
