@@ -14,19 +14,19 @@ use std::path::PathBuf;
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
-    /// Perform Kaprekar's routine on a number.
+    /// Perform Kaprekar's routine on a number
     #[arg(short, long, default_value = "0")]
     number: BigUint,
     
-    /// Perform Kaprekar's routine starting from a number.
+    /// Perform Kaprekar's routine starting from a number
     #[arg(short, long, default_value = "0")]
     start: BigUint,
     
-    /// Perform Kaprekar's routine up to a number.
+    /// Perform Kaprekar's routine up to a number
     #[arg(short, long, default_value = "0")]
     end: BigUint,
     
-    /// Perform Kaprekar's routine on all numbers.
+    /// Perform Kaprekar's routine on all numbers
     #[arg(short, long)]
     all: bool,
     
@@ -34,8 +34,7 @@ struct Args {
     #[arg(short, long, default_value = "20")]
     iterations: u16,
     
-    /// Empty out non-series and non-constant vectors.
-    /// https://kaprekar.sourceforge.net/output/sample.php
+    /// Empty out non-series and non-constant vectors
     #[arg(short, long, default_value = "false")]
     truncate: bool,
     
@@ -43,7 +42,7 @@ struct Args {
     #[arg(short, long)]
     output: Option<PathBuf>,
     
-    /// Continue adding results to an existing csv file.
+    /// Continue adding results to an existing csv file
     #[arg(short, long)]
     cont: Option<PathBuf>,
 
@@ -51,7 +50,7 @@ struct Args {
     #[arg(short, long)]
     verbose: bool,
     
-    /// Create a symlink in /usr/local/bin.
+    /// Create a symlink in /usr/local/bin
     #[arg(long)]
     symlink: bool,
 }
