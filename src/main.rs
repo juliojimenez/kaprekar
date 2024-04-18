@@ -57,12 +57,16 @@ struct Args {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Clap
     let args = Args::parse();
     let mut cmd = Args::command();
+    // Buffer Writer
     let mut wtr: Option<BufWriter::<File>> = None;
+    // Kaprekar on a single number
     if args.number != Zero::zero() {
         let result = kaprekar(args.number, args.verbose, args.iterations, args.truncate);
         println!("{:?}", result);
+    // Kaprekar on all numbers
     } else if args.all {
         let mut number: BigUint = Zero::zero();
         if let Some(output_path) = args.output {
@@ -118,6 +122,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 },
                 Err(e) => eprintln!("Failed to create file: {}", e),
             }
+        } else if let Some(cont_path) = args.cont {
+            match File::open(&cont_path) {
+                Ok(file) => {
+                    let rdr = BufReader::new(file);
+                    for line in rdr.lines() {
+                        let line = line?;
+                        let mut parts = line.split(",");
+                        let n = parts.next().unwrap().parse::<BigUint>().unwrap();
+                        number = n;
+                    }
+                },
+                Err(e) => eprintln!("Failed to open file: {}", e),
+            }
+            match OpenOptions::new().append(true).create(true).open(&cont_path) {
+                Ok(file) => {
+                    wtr = Some(BufWriter::new(file));
+                    // Now you can use wtr to write your CSV data
+                },
+                Err(e) => eprintln!("Failed to open file: {}", e),
+            }
         }
         while number <= args.end {
             let result = kaprekar(number.clone(), args.verbose, args.iterations, args.truncate);
@@ -143,6 +167,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 },
                 Err(e) => eprintln!("Failed to create file: {}", e),
             }
+        } else if let Some(cont_path) = args.cont {
+            match File::open(&cont_path) {
+                Ok(file) => {
+                    let rdr = BufReader::new(file);
+                    for line in rdr.lines() {
+                        let line = line?;
+                        let mut parts = line.split(",");
+                        let n = parts.next().unwrap().parse::<BigUint>().unwrap();
+                        number = n;
+                    }
+                },
+                Err(e) => eprintln!("Failed to open file: {}", e),
+            }
+            match OpenOptions::new().append(true).create(true).open(&cont_path) {
+                Ok(file) => {
+                    wtr = Some(BufWriter::new(file));
+                    // Now you can use wtr to write your CSV data
+                },
+                Err(e) => eprintln!("Failed to open file: {}", e),
+            }
         }
         loop {
             let result = kaprekar(number.clone(), args.verbose, args.iterations, args.truncate);
@@ -167,6 +211,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     // Now you can use wtr to write your CSV data
                 },
                 Err(e) => eprintln!("Failed to create file: {}", e),
+            }
+        } else if let Some(cont_path) = args.cont {
+            match File::open(&cont_path) {
+                Ok(file) => {
+                    let rdr = BufReader::new(file);
+                    for line in rdr.lines() {
+                        let line = line?;
+                        let mut parts = line.split(",");
+                        let n = parts.next().unwrap().parse::<BigUint>().unwrap();
+                        number = n;
+                    }
+                },
+                Err(e) => eprintln!("Failed to open file: {}", e),
+            }
+            match OpenOptions::new().append(true).create(true).open(&cont_path) {
+                Ok(file) => {
+                    wtr = Some(BufWriter::new(file));
+                    // Now you can use wtr to write your CSV data
+                },
+                Err(e) => eprintln!("Failed to open file: {}", e),
             }
         }
         while number <= args.end {
